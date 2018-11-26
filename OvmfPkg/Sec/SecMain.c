@@ -825,6 +825,7 @@ SecCoreStartupWithStack (
 
  #endif
 
+  AsmWriteCr0 (AsmReadCr0 () & (~BIT30));
   //
   // To ensure SMM can't be compromised on S3 resume, we must force re-init of
   // the BaseExtractGuidedSectionLib. Since this is before library contructors
