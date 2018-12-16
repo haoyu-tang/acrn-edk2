@@ -74,3 +74,4 @@
   gEfiEndOfDxeEventGroupGuid
   gRootBridgesConnectedEventGroupGuid
   gUefiShellFileGuid
+  gEfiTtyTermGuid

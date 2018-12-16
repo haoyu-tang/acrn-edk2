@@ -9,6 +9,7 @@
 
 #include "BdsPlatform.h"
 #include <Guid/RootBridgesConnectedEventGroup.h>
+#include <Guid/TtyTerm.h>
 #include <Protocol/FirmwareVolume2.h>
 #include <Library/PlatformBmPrintScLib.h>
 #include <Library/Tcg2PhysicalPresenceLib.h>
@@ -384,6 +385,9 @@ PlatformBootManagerBeforeConsole (
   EFI_STATUS  Status;
 
   DEBUG ((DEBUG_INFO, "PlatformBootManagerBeforeConsole\n"));
+
+  CopyGuid (&gTerminalTypeDeviceNode.Guid, &gEfiTtyTermGuid);
+
   InstallDevicePathCallback ();
 
   VisitAllInstancesOfProtocol (

@@ -485,7 +485,7 @@
   # DEBUG_VERBOSE   0x00400000  // Detailed debug messages that may
   #                             // significantly impact boot performance
   # DEBUG_ERROR     0x80000000  // Error
-  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
+  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8020004F
 
 !if $(SOURCE_DEBUG_ENABLE) == TRUE
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x17
@@ -516,6 +516,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdConInConnectOnDemand|FALSE
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVendor|L"ACRN"
+  gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType|4
   gUefiOvmfPkgTokenSpaceGuid.PcdDebugIoPort|0x2F8
   # Do not reserve variable MTRRs for OS use to avoid ASSERT when
   # fixed MTRRs are not supported (MtrrCap.Bits.FIX == 0).
