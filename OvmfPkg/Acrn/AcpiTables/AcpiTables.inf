@@ -28,12 +28,14 @@
   Dsdt.asl
   Facp.aslc
   Facs.aslc
-  Hpet.aslc
   Madt.aslc
-  Mcfg.aslc
   Platform.h
-  Spcr.aslc
+  Ssdt.asl
 
 [Packages]
   MdePkg/MdePkg.dec
+  OvmfPkg/OvmfPkg.dec
+
+[Pcd]
+  gUefiOvmfPkgTokenSpaceGuid.PcdDebugIoPort
 
