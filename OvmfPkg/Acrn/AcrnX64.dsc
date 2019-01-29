@@ -580,8 +580,8 @@
   # MdeModulePkg resolution sets up the system display resolution
   gEfiMdeModulePkgTokenSpaceGuid.PcdVideoHorizontalResolution|0
   gEfiMdeModulePkgTokenSpaceGuid.PcdVideoVerticalResolution|0
-  gEfiMdeModulePkgTokenSpaceGuid.PcdConOutRow|0
-  gEfiMdeModulePkgTokenSpaceGuid.PcdConOutColumn|0
+  #gEfiMdeModulePkgTokenSpaceGuid.PcdConOutRow|0
+  #gEfiMdeModulePkgTokenSpaceGuid.PcdConOutColumn|0
 
 [PcdsDynamicHii]
 !include OvmfPkg/Include/Dsc/OvmfTpmPcdsHii.dsc.inc
