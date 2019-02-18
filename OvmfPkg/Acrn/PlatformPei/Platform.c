@@ -576,6 +576,35 @@ BuildPlatformInfoHob (
   return (EFI_HOB_PLATFORM_INFO *)GET_GUID_HOB_DATA (GuidHob);
 }
 
+STATIC
+VOID
+FsbDetect (
+  VOID
+  )
+{
+  CHAR8         Signature[13];
+  UINT32        RegEax;
+  RETURN_STATUS Status;
+
+  Signature[12] = '\0';
+
+  AsmCpuid (0x40000000,
+            &RegEax,
+            (UINT32 *) &Signature[0],
+            (UINT32 *) &Signature[4],
+            (UINT32 *) &Signature[8]);
+
+  if (!AsciiStrCmp (Signature, "ACRNACRNACRN")) {
+    if (RegEax >= 0x40000010) {
+      AsmCpuid (0x40000010, &RegEax, NULL, NULL, NULL);
+      Status = PcdSet32S (PcdFSBClock, RegEax * 1000);
+      ASSERT_RETURN_ERROR (Status);
+      DEBUG ((DEBUG_INFO, "FSB clock detected: %u Hz\n", PcdGet32 (PcdFSBClock)));
+    }
+  }
+}
+
+
 /**
   Perform Platform PEI initialization.
 
@@ -608,6 +637,8 @@ InitializePlatform (
   BootModeInitialization ();
   AddressWidthInitialization ();
   MaxCpuCountInitialization ();
+
+  FsbDetect ();
 
   //
   // Query Host Bridge DID
