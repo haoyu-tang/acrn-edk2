@@ -323,7 +323,11 @@ DebugCodeEnabled (
   VOID
   )
 {
+#if !defined(MDEPKG_NDEBUG)
   return (BOOLEAN)((PcdGet8 (PcdDebugPropertyMask) & DEBUG_PROPERTY_DEBUG_CODE_ENABLED) != 0);
+#else
+  return FALSE;
+#endif
 }
 
 /**
