@@ -120,6 +120,16 @@ XenPublishRamRegions (
   VOID
   );
 
+RETURN_STATUS
+AcrnGetSystemMemorySizeBelow4gb (
+  OUT  UINT32               *MemSize OPTIONAL
+  );
+
+RETURN_STATUS
+AcrnGetSystemMemorySizeAbove4gb (
+  OUT  UINT64               *MemSize OPTIONAL
+  );
+
 extern EFI_BOOT_MODE  mBootMode;
 
 extern BOOLEAN  mS3Supported;
