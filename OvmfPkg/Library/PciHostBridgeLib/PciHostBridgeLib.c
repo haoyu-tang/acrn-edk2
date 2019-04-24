@@ -83,7 +83,8 @@ PciHostBridgeGetRootBridges (
            Attributes,
            AllocationAttributes,
            FALSE,
-           PcdGet16 (PcdOvmfHostBridgePciDevId) != INTEL_Q35_MCH_DEVICE_ID,
+           PcdGet16 (PcdOvmfHostBridgePciDevId) != INTEL_Q35_MCH_DEVICE_ID &&
+           PcdGet16 (PcdOvmfHostBridgePciDevId) != ACRN_HOSTBRIDGE_DEVICE_ID,
            0,
            PCI_MAX_BUS,
            &Io,
