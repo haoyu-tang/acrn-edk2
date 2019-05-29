@@ -37,7 +37,6 @@
   AcpiPlatformLib
   BaseLib
   BaseMemoryLib
-  AcrnFwCtlLib
   DebugLib
   DxeServicesTableLib
   MemoryAllocationLib

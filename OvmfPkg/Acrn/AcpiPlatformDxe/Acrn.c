@@ -9,7 +9,6 @@
 #include "AcpiPlatform.h"
 
 #include <Library/BaseMemoryLib.h>
-#include <Library/AcrnFwCtlLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/QemuFwCfgLib.h>             // QemuFwCfgFindFile()
 
@@ -35,15 +34,6 @@ AcrnGetCpuCount (
 
     return EFI_SUCCESS;
   }
-
-  //
-  // QemuFwCfg not available, try AcrnFwCtl.
-  //
-  Size = sizeof (*CpuCount);
-  if (AcrnFwCtlGet ("hw.ncpu", CpuCount, &Size) == RETURN_SUCCESS) {
-    return EFI_SUCCESS;
-  }
-
   return EFI_UNSUPPORTED;
 }
 
