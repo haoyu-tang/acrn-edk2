@@ -688,6 +688,7 @@
   OvmfPkg/VirtioPciDeviceDxe/VirtioPciDeviceDxe.inf
   OvmfPkg/Virtio10Dxe/Virtio10.inf
   OvmfPkg/VirtioBlkDxe/VirtioBlk.inf
+  OvmfPkg/GvtGopDxe/GvtGopDxe.inf
   OvmfPkg/VirtioScsiDxe/VirtioScsi.inf
   OvmfPkg/VirtioRngDxe/VirtioRng.inf
   MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
