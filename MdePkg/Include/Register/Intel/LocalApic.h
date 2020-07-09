@@ -124,8 +124,8 @@ typedef union {
     UINT32    DeliveryStatus : 1;  ///< 0: Idle, 1: send pending.
     UINT32    Reserved1      : 3;  ///< Reserved.
     UINT32    Mask           : 1;  ///< 0: Not masked, 1: Masked.
-    UINT32    TimerMode      : 1;  ///< 0: One-shot, 1: Periodic.
-    UINT32    Reserved2      : 14; ///< Reserved.
+    UINT32    TimerMode      : 2;  ///< 0: One-shot, 1: Periodic, 2: TSC-deadline.
+    UINT32    Reserved2      : 13; ///< Reserved.
   } Bits;
   UINT32    Uint32;
 } LOCAL_APIC_LVT_TIMER;
