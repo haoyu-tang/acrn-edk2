@@ -54,6 +54,7 @@
   BaseMemoryLib
   DebugLib
   ReportStatusCodeLib
+  TimerLib
 
 
 [Protocols]
