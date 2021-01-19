@@ -297,7 +297,7 @@ INF  MdeModulePkg/Bus/Pci/EhciDxe/EhciDxe.inf
 INF  MdeModulePkg/Bus/Pci/XhciDxe/XhciDxe.inf
 INF  MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
 INF  MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
-#INF  MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
+INF  MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 
 INF  OvmfPkg/PlatformDxe/Platform.inf
 INF  OvmfPkg/AmdSevDxe/AmdSevDxe.inf
