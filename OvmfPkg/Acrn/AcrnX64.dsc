@@ -552,8 +552,8 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase|0
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase|0
   gEfiMdeModulePkgTokenSpaceGuid.PcdPciDisableBusEnumeration|TRUE
-  gEfiMdeModulePkgTokenSpaceGuid.PcdVideoHorizontalResolution|800
-  gEfiMdeModulePkgTokenSpaceGuid.PcdVideoVerticalResolution|600
+  gEfiMdeModulePkgTokenSpaceGuid.PcdVideoHorizontalResolution|1024
+  gEfiMdeModulePkgTokenSpaceGuid.PcdVideoVerticalResolution|768
   gEfiMdeModulePkgTokenSpaceGuid.PcdAcpiS3Enable|FALSE
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfHostBridgePciDevId|0
   gUefiOvmfPkgTokenSpaceGuid.PcdPciIoBase|0x0
@@ -592,8 +592,8 @@
 !include OvmfPkg/Include/Dsc/OvmfTpmPcds.dsc.inc
 
   # MdeModulePkg resolution sets up the system display resolution
-  gEfiMdeModulePkgTokenSpaceGuid.PcdVideoHorizontalResolution|0
-  gEfiMdeModulePkgTokenSpaceGuid.PcdVideoVerticalResolution|0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdVideoHorizontalResolution|1024
+  gEfiMdeModulePkgTokenSpaceGuid.PcdVideoVerticalResolution|768
   #gEfiMdeModulePkgTokenSpaceGuid.PcdConOutRow|0
   #gEfiMdeModulePkgTokenSpaceGuid.PcdConOutColumn|0
 
@@ -734,6 +734,8 @@
   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
+
+  OvmfPkg/QemuVideoDxe/QemuVideoDxe.inf
 
   OvmfPkg/Acrn/AcrnRfbDxe/AcrnRfbDxe.inf {
     <LibraryClasses>
