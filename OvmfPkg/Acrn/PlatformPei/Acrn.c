@@ -64,10 +64,14 @@ AcrnGetSystemMemorySizeBelow4gb (
     return RETURN_UNSUPPORTED;
   }
 
-  for (Loop = (INT32)(E820->E820EntriesCount - 1), Entry = &E820->E820Map[Loop];
-       Loop >= 0; Entry = &E820->E820Map[--Loop]) {
-    if (Entry->BaseAddr + Entry->Length < BASE_4GB &&
-        Entry->Type == EfiAcpiAddressRangeMemory) {
+  //
+  // ACRN e820 tables are sorted and the low memory address
+  // is start larger than 1MB
+  //
+  for (Loop = 0; Loop < E820->E820EntriesCount; Loop++) {
+    Entry = &E820->E820Map[Loop];
+    if (Entry->Type == EfiAcpiAddressRangeMemory &&
+        Entry->BaseAddr >= 0x100000) {
       *MemSize = Entry->BaseAddr + Entry->Length;
       return RETURN_SUCCESS;
     }
