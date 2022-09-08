@@ -305,6 +305,10 @@ PciSearchDevice (
     }
 
     ResetPowerManagementFeature (PciIoDevice);
+  } else {
+    if (!IS_CARDBUS_BRIDGE (Pci)) {
+      GetOpRomInfo (PciIoDevice);
+    }
   }
 
   //
@@ -1163,7 +1167,16 @@ ProcessOptionRomLight (
       ProcessOptionRomLight (Temp);
     }
 
-    Temp->AllOpRomProcessed = PciRomGetImageMapping (Temp);
+    if (!IS_CARDBUS_BRIDGE (&Temp->Pci) && (Temp->RomSize != 0)) {
+      LoadOpRomImageLight (Temp);
+      Temp->AllOpRomProcessed = FALSE;
+    } else {
+      //
+      // When RomSize is zero, it is not found in mRootImageTable.
+      // It is unnecessary to call the PciRomGetImageMapping.
+      //
+      Temp->AllOpRomProcessed = TRUE;
+    }
 
     CurrentLink = CurrentLink->ForwardLink;
   }
