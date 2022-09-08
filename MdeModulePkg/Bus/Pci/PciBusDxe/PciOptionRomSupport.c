@@ -234,6 +234,7 @@ GetOpRomInfo (
 {
   UINT8                            RomBarIndex;
   UINT32                           AllOnes;
+  UINT32                           OriginalValue;
   UINT64                           Address;
   EFI_STATUS                       Status;
   UINT8                            Bus;
@@ -263,12 +264,20 @@ GetOpRomInfo (
     RomBarIndex = PCI_BRIDGE_ROMBAR;
   }
 
+  // Read the original ROM BAR value before probing.
+  Address = EFI_PCI_ADDRESS (Bus, Device, Function, RomBarIndex);
+  PciRootBridgeIo->Pci.Read (
+                         PciRootBridgeIo,
+                         EfiPciWidthUint32,
+                         Address,
+                         1,
+                         &OriginalValue
+                         );
+
   //
   // The bit0 is 0 to prevent the enabling of the Rom address decoder
   //
   AllOnes = 0xfffffffe;
-  Address = EFI_PCI_ADDRESS (Bus, Device, Function, RomBarIndex);
-
   Status = PciRootBridgeIo->Pci.Write (
                                   PciRootBridgeIo,
                                   EfiPciWidthUint32,
@@ -290,6 +299,13 @@ GetOpRomInfo (
                                   1,
                                   &AllOnes
                                   );
+  PciRootBridgeIo->Pci.Write (
+                         PciRootBridgeIo,
+                         EfiPciWidthUint32,
+                         Address,
+                         1,
+                         &OriginalValue
+                         );
   if (EFI_ERROR (Status)) {
     return EFI_NOT_FOUND;
   }
