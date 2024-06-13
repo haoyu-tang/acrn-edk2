@@ -118,6 +118,9 @@
 
   ##  @libraryclass  Provides a Nor flash interface.
   #
+    ##  @libraryclass  S3 support for ACRN
+    #
+    AcrnS3Lib|Include/Library/AcrnS3Lib.h
   VirtNorFlashPlatformLib|Include/Library/VirtNorFlashPlatformLib.h
 
   ##  @libraryclass  Invoke Xen hypercalls
