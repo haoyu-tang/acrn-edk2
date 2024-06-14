@@ -33,6 +33,7 @@
   BaseMemoryLib
   DebugLib
   UefiBootServicesTableLib
+  AcrnS3Lib
 
 [Protocols]
   gEfiLockBoxProtocolGuid    ## SOMETIMES_PRODUCES

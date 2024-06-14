@@ -13,6 +13,7 @@
 #include <Protocol/FirmwareVolume2.h>
 #include <Library/PlatformBmPrintScLib.h>
 #include <Library/Tcg2PhysicalPresenceLib.h>
+#include <Library/AcrnS3Lib.h>
 
 #include <Protocol/BlockIo.h>
 
@@ -418,6 +419,10 @@ PlatformBootManagerBeforeConsole (
   // Process TPM PPI request
   //
   Tcg2PhysicalPresenceLibProcessRequest (NULL);
+
+  if (AcrnS3Enabled ()) {
+    SaveS3BootScript ();
+  }
 
   //
   // Prevent further changes to LockBoxes or SMRAM.

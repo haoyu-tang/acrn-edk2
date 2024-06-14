@@ -12,6 +12,7 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
+#include <Library/AcrnS3Lib.h>
 #include <Protocol/LockBox.h>
 #include <LockBoxLib.h>
 
@@ -113,7 +114,7 @@ LockBoxDxeLibInitialize (
 
   Status = LockBoxLibInitialize ();
   if (!EFI_ERROR (Status)) {
-    if (PcdGetBool (PcdAcpiS3Enable)) {
+    if (PcdGetBool (PcdAcpiS3Enable) || AcrnS3Enabled ()) {
       //
       // When S3 enabled, the first driver run with this library linked will
       // have this library constructor to install LockBox protocol on the

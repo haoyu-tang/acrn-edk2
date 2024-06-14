@@ -28,6 +28,7 @@
 #include <Library/PciLib.h>
 #include <Library/PeimEntryPoint.h>
 #include <Library/PeiServicesLib.h>
+#include <Library/AcrnS3Lib.h>
 #include <Library/PlatformInitLib.h>
 #include <Library/ResourcePublicationLib.h>
 #include <Guid/MemoryTypeInformation.h>
@@ -621,6 +622,8 @@ InitializePlatform (
   IN CONST EFI_PEI_SERVICES     **PeiServices
   )
 {
+  EFI_STATUS  Status;
+
   DEBUG ((DEBUG_INFO, "Platform PEIM Loaded\n"));
   BuildPlatformInfoHob ();
 
@@ -639,6 +642,16 @@ InitializePlatform (
   MaxCpuCountInitialization ();
 
   FsbDetect ();
+
+  if (AcrnS3Enabled ()) {
+    DEBUG ((DEBUG_INFO, "S3 support was detected on ACRN\n"));
+    mS3Supported = TRUE;
+  }
+
+  if (mS3Supported) {
+    Status = PcdSetBoolS (PcdAcpiS3Enable, TRUE);
+    ASSERT_EFI_ERROR (Status);
+  }
 
   //
   // Query Host Bridge DID
