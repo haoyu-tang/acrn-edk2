@@ -32,6 +32,7 @@ Module Name:
 #include <Library/PeimEntryPoint.h>
 #include <Library/ResourcePublicationLib.h>
 #include <Library/MtrrLib.h>
+#include <Register/Intel/Msr.h>
 
 #include "Platform.h"
 #include "Cmos.h"
@@ -508,6 +509,10 @@ QemuInitializeRam (
   // cover it exactly.
   //
   if (IsMtrrSupported ()) {
+    MSR_IA32_MTRRCAP_REGISTER  MtrrCap;
+
+    MtrrCap.Uint64 = AsmReadMsr64 (MSR_IA32_MTRRCAP);
+
     MtrrGetAllMtrrs (&MtrrSettings);
 
     //
@@ -522,29 +527,45 @@ QemuInitializeRam (
     //
     SetMem (&MtrrSettings.Fixed, sizeof MtrrSettings.Fixed, MTRR_CACHE_WRITE_BACK);
     ZeroMem (&MtrrSettings.Variables, sizeof MtrrSettings.Variables);
-    MtrrSettings.MtrrDefType |= BIT10;
+    //MtrrSettings.MtrrDefType |= BIT10;
     MtrrSetAllMtrrs (&MtrrSettings);
 
-    //
-    // Set memory range from 640KB to 1MB to uncacheable
-    //
-    Status = MtrrSetMemoryAttribute (
-               BASE_512KB + BASE_128KB,
-               BASE_1MB - (BASE_512KB + BASE_128KB),
-               CacheUncacheable
-               );
-    ASSERT_EFI_ERROR (Status);
+    if (MtrrCap.Bits.FIX == 0) {
+      //
+      // Fixed MTRRs are not supported (e.g. ACRN hypervisor).
+      // With default type WB and only variable MTRRs available,
+      // there are not enough variable MTRRs to carve out UC holes
+      // in the sub-4GB region. Skip UC MTRR programming; the
+      // hypervisor is expected to handle memory type enforcement.
+      //
+      DEBUG ((
+        DEBUG_WARN,
+        "%a: Fixed MTRRs not supported (VCNT=%d), skipping UC MTRR setup\n",
+        __func__,
+        MtrrCap.Bits.VCNT
+        ));
+    } else {
+      //
+      // Set memory range from 640KB to 1MB to uncacheable
+      //
+      Status = MtrrSetMemoryAttribute (
+                 BASE_512KB + BASE_128KB,
+                 BASE_1MB - (BASE_512KB + BASE_128KB),
+                 CacheUncacheable
+                 );
+      ASSERT_EFI_ERROR (Status);
 
-    //
-    // Set memory range from the "top of lower RAM" (RAM below 4GB) to 4GB as
-    // uncacheable
-    //
-    Status = MtrrSetMemoryAttribute (
-               LowerMemorySize,
-               SIZE_4GB - LowerMemorySize,
-               CacheUncacheable
-               );
-    ASSERT_EFI_ERROR (Status);
+      //
+      // Set memory range from the "top of lower RAM" (RAM below 4GB) to 4GB as
+      // uncacheable
+      //
+      Status = MtrrSetMemoryAttribute (
+                 LowerMemorySize,
+                 SIZE_4GB - LowerMemorySize,
+                 CacheUncacheable
+                 );
+      ASSERT_EFI_ERROR (Status);
+    }
   }
 }
 

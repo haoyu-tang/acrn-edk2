@@ -516,6 +516,9 @@
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVendor|L"ACRN"
   gUefiOvmfPkgTokenSpaceGuid.PcdDebugIoPort|0x2F8
+  # Do not reserve variable MTRRs for OS use to avoid ASSERT when
+  # fixed MTRRs are not supported (MtrrCap.Bits.FIX == 0).
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuNumberOfReservedVariableMtrrs|0
 
 ################################################################################
 #
