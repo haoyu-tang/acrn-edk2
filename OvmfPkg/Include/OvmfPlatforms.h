@@ -17,6 +17,7 @@
 #include <IndustryStandard/Bhyve.h>
 #include <IndustryStandard/Microvm.h>
 #include <IndustryStandard/CloudHv.h>
+#include <IndustryStandard/Acrn.h>
 
 //
 // OVMF Host Bridge DID Address

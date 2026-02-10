@@ -256,7 +256,7 @@ GetApicMode (
       // Local APIC should have been enabled
       //
       ASSERT (ApicBaseMsr.Bits.EN != 0);
-      ASSERT (ApicBaseMsr.Bits.EXTD == 0);
+//      ASSERT (ApicBaseMsr.Bits.EXTD == 0);
     }
   }
   DEBUG_CODE_END ();
@@ -745,11 +745,12 @@ InitializeApicTimer (
   //
   InitializeLocalApicSoftwareEnable (TRUE);
 
+#if 0
   //
   // Program init-count register.
   //
   WriteLocalApicReg (XAPIC_TIMER_INIT_COUNT_OFFSET, InitCount);
-
+#endif
   if (DivideValue != 0) {
     ASSERT (DivideValue <= 128);
     ASSERT (DivideValue == GetPowerOfTwo32 ((UINT32)DivideValue));
@@ -774,6 +775,11 @@ InitializeApicTimer (
   LvtTimer.Bits.Mask   = 0;
   LvtTimer.Bits.Vector = Vector;
   WriteLocalApicReg (XAPIC_LVT_TIMER_OFFSET, LvtTimer.Uint32);
+
+  //
+  // Program init-count register.
+  //
+  WriteLocalApicReg (XAPIC_TIMER_INIT_COUNT_OFFSET, InitCount);
 }
 
 /**

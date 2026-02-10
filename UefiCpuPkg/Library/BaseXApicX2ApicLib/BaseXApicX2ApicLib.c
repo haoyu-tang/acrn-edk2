@@ -498,7 +498,7 @@ SetApicMode (
       case LOCAL_APIC_MODE_XAPIC:
         break;
       case LOCAL_APIC_MODE_X2APIC:
-        ApicBaseMsr.Uint64    = LocalApicReadMsrReg64 (MSR_IA32_APIC_BASE);
+        ApicBaseMsr.Uint64 = AsmReadMsr64 (MSR_IA32_APIC_BASE);
         ApicBaseMsr.Bits.EXTD = 1;
         LocalApicWriteMsrReg64 (MSR_IA32_APIC_BASE, ApicBaseMsr.Uint64);
         break;
