@@ -33,6 +33,7 @@
 #include <Guid/MemoryTypeInformation.h>
 #include <Ppi/MasterBootMode.h>
 #include <IndustryStandard/Pci22.h>
+#include <IndustryStandard/AcrnPlatform.h>
 #include <OvmfPlatforms.h>
 
 #include "Platform.h"
@@ -178,6 +179,7 @@ MemMapInitialization (
 
     TopOfLowRam  = GetSystemMemorySizeBelow4gb ();
     PciExBarBase = 0;
+    PciSize = 0;
     if (mHostBridgeDevId == INTEL_Q35_MCH_DEVICE_ID) {
       //
       // The MMCONFIG area is expected to fall between the top of low RAM and
@@ -187,6 +189,17 @@ MemMapInitialization (
       ASSERT (TopOfLowRam <= PciExBarBase);
       ASSERT (PciExBarBase <= MAX_UINT32 - SIZE_256MB);
       PciBase = (UINT32)(PciExBarBase + SIZE_256MB);
+      AddIoMemoryBaseSizeHob (ICH9_ROOT_COMPLEX_BASE, SIZE_16KB);
+    } else if (mHostBridgeDevId == ACRN_HOSTBRIDGE_DEVICE_ID) {
+      //
+      // The MMCONFIG area is expected to fall between the top of low RAM and
+      // the top of the 32-bit PCI host aperture.
+      //
+      PciExBarBase = FixedPcdGet64 (PcdPciExpressBaseAddress);
+      ASSERT (PciExBarBase <= MAX_UINT32 - SIZE_256MB);
+      PciBase = (TopOfLowRam < BASE_2GB) ? BASE_2GB : TopOfLowRam;
+      ASSERT (PciBase < PciExBarBase);
+      PciSize = PciExBarBase - PciBase;
     } else {
       PciBase = (UINT32)PcdGet64 (PcdPciMmio32Base);
       if (PciBase == 0) {
@@ -207,7 +220,10 @@ MemMapInitialization (
     // 0xFED20000    gap                          896 KB
     // 0xFEE00000    LAPIC                          1 MB
     //
-    PciSize = 0xFC000000 - PciBase;
+    if (PciSize == 0) {
+      PciSize = 0xFC000000 - PciBase;
+    }
+
     AddIoMemoryBaseSizeHob (PciBase, PciSize);
     PcdStatus = PcdSet64S (PcdPciMmio32Base, PciBase);
     ASSERT_RETURN_ERROR (PcdStatus);
@@ -216,8 +232,8 @@ MemMapInitialization (
 
     AddIoMemoryBaseSizeHob (0xFEC00000, SIZE_4KB);
     AddIoMemoryBaseSizeHob (0xFED00000, SIZE_1KB);
-    if (mHostBridgeDevId == INTEL_Q35_MCH_DEVICE_ID) {
-      AddIoMemoryBaseSizeHob (ICH9_ROOT_COMPLEX_BASE, SIZE_16KB);
+
+    if (PciExBarBase != 0) {
       //
       // Note: there should be an
       //

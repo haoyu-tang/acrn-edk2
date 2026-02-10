@@ -42,3 +42,6 @@
   MemoryAllocationLib
   PciLib
   QemuFwCfgLib
+
+[Pcd]
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfHostBridgePciDevId

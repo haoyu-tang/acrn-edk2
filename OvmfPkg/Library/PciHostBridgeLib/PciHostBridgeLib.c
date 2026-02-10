@@ -15,6 +15,8 @@
 #include <Library/PciHostBridgeUtilityLib.h>          // PciHostBridgeUtilit...
 #include <Protocol/PciHostBridgeResourceAllocation.h> // EFI_PCI_HOST_BRIDGE...
 #include <Protocol/PciRootBridgeIo.h>                 // EFI_PCI_ATTRIBUTE_I...
+#include <IndustryStandard/AcrnPlatform.h>
+
 
 STATIC PCI_ROOT_BRIDGE_APERTURE  mNonExistAperture = { MAX_UINT64, 0 };
 
@@ -43,15 +45,25 @@ PciHostBridgeGetRootBridges (
   ZeroMem (&Mem, sizeof (Mem));
   ZeroMem (&MemAbove4G, sizeof (MemAbove4G));
 
-  Attributes = EFI_PCI_ATTRIBUTE_IDE_PRIMARY_IO |
-               EFI_PCI_ATTRIBUTE_IDE_SECONDARY_IO |
-               EFI_PCI_ATTRIBUTE_ISA_IO_16 |
-               EFI_PCI_ATTRIBUTE_ISA_MOTHERBOARD_IO |
-               EFI_PCI_ATTRIBUTE_VGA_MEMORY |
-               EFI_PCI_ATTRIBUTE_VGA_IO_16 |
-               EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO_16;
+  Attributes = EFI_PCI_ATTRIBUTE_ISA_IO_16 |
+    EFI_PCI_ATTRIBUTE_ISA_MOTHERBOARD_IO;
 
-  AllocationAttributes = EFI_PCI_HOST_BRIDGE_COMBINE_MEM_PMEM;
+  if (PcdGet16 (PcdOvmfHostBridgePciDevId) == ACRN_HOSTBRIDGE_DEVICE_ID) {
+    Attributes |= EFI_PCI_ATTRIBUTE_ISA_IO;
+  } else {
+    Attributes |= EFI_PCI_ATTRIBUTE_IDE_PRIMARY_IO |
+      EFI_PCI_ATTRIBUTE_IDE_SECONDARY_IO |
+      EFI_PCI_ATTRIBUTE_VGA_MEMORY |
+      EFI_PCI_ATTRIBUTE_VGA_IO_16 |
+      EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO_16;
+  }
+
+  AllocationAttributes = 0;
+
+  if (PcdGet16 (PcdOvmfHostBridgePciDevId) != ACRN_HOSTBRIDGE_DEVICE_ID) {
+    AllocationAttributes |= EFI_PCI_HOST_BRIDGE_COMBINE_MEM_PMEM;
+  }
+
   if (PcdGet64 (PcdPciMmio64Size) > 0) {
     AllocationAttributes |= EFI_PCI_HOST_BRIDGE_MEM64_DECODE;
     MemAbove4G.Base       = PcdGet64 (PcdPciMmio64Base);
@@ -80,6 +92,7 @@ PciHostBridgeGetRootBridges (
            &mNonExistAperture,
            &mNonExistAperture
            );
+
 }
 
 /**

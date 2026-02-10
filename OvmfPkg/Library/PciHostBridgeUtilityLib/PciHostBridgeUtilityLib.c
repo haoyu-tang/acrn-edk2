@@ -12,6 +12,7 @@
 
 #include <IndustryStandard/Acpi10.h>
 #include <IndustryStandard/Pci.h>
+#include <IndustryStandard/AcrnPlatform.h>
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
@@ -22,7 +23,7 @@
 #include <Library/PciLib.h>
 #include <Library/QemuFwCfgLib.h>
 #include <Protocol/PciHostBridgeResourceAllocation.h>
-
+#include <Library/PcdLib.h>                           // PcdGet64()
 #pragma pack(1)
 typedef struct {
   ACPI_HID_DEVICE_PATH        AcpiDevicePath;
@@ -362,6 +363,9 @@ PciHostBridgeUtilityGetRootBridgesBusScan (
       if (EFI_ERROR (Status)) {
         goto FreeBridges;
       }
+      if (PcdGet16(PcdOvmfHostBridgePciDevId) == ACRN_HOSTBRIDGE_DEVICE_ID) {
+	      Bridges[Initialized].ResourceAssigned = TRUE;
+      }
 
       ++Initialized;
       LastRootBridgeNumber = RootBridgeNumber;
@@ -389,6 +393,9 @@ PciHostBridgeUtilityGetRootBridgesBusScan (
              );
   if (EFI_ERROR (Status)) {
     goto FreeBridges;
+  }
+  if (PcdGet16 (PcdOvmfHostBridgePciDevId) == ACRN_HOSTBRIDGE_DEVICE_ID) {
+    Bridges[Initialized].ResourceAssigned = TRUE;
   }
 
   ++Initialized;
