@@ -1831,6 +1831,23 @@ GetMmioAddressTranslationOffset (
   //
   // The resource occupied by BAR should be in the range reported by RootBridge.
   //
+  DEBUG ((DEBUG_ERROR, "GetMmioAddressTranslationOffset: BAR range [0x%lx, 0x%lx) not found in RootBridge config\n",
+    AddrRangeMin, AddrRangeMin + AddrLen));
+
+  // Dump RootBridge configuration for debugging
+  Status = RootBridgeIo->Configuration (RootBridgeIo, (VOID **)&Configuration);
+  if (!EFI_ERROR (Status)) {
+    while (Configuration->Desc == ACPI_ADDRESS_SPACE_DESCRIPTOR) {
+      if (Configuration->ResType == ACPI_ADDRESS_SPACE_TYPE_MEM) {
+        DEBUG ((DEBUG_ERROR, "  RootBridge MEM: [0x%lx, 0x%lx) Offset=0x%lx\n",
+          Configuration->AddrRangeMin + Configuration->AddrTranslationOffset,
+          Configuration->AddrRangeMin + Configuration->AddrLen + Configuration->AddrTranslationOffset,
+          Configuration->AddrTranslationOffset));
+      }
+      Configuration++;
+    }
+  }
+
   ASSERT (FALSE);
   return (UINT64)-1;
 }

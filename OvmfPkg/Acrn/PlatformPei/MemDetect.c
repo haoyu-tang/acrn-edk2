@@ -161,7 +161,10 @@ GetFirstNonAddress (
   UINT64         Pci64Base, Pci64Size;
   RETURN_STATUS  PcdStatus;
 
-  FirstNonAddress = BASE_4GB + GetSystemMemorySizeAbove4gb ();
+  Pci64Base = 0;
+  if (AcrnGetFirstNonAddress (&FirstNonAddress) != RETURN_SUCCESS) {
+    FirstNonAddress = BASE_4GB + GetSystemMemorySizeAbove4gb ();
+  }
 
   //
   // If DXE is 32-bit, then we're done; PciBusDxe will degrade 64-bit MMIO
@@ -180,6 +183,8 @@ GetFirstNonAddress (
   // consider the 64-bit PCI host aperture too. Fetch the default size.
   //
   Pci64Size = PcdGet64 (PcdPciMmio64Size);
+
+  AcrnFindPciMmio64Aperture (&Pci64Base, &Pci64Size);
 
   if (Pci64Size == 0) {
     if (mBootMode != BOOT_ON_S3_RESUME) {
@@ -204,7 +209,11 @@ GetFirstNonAddress (
   // SeaBIOS aligns both boundaries of the 64-bit PCI host aperture to 1GB, so
   // that the host can map it with 1GB hugepages. Follow suit.
   //
-  Pci64Base = ALIGN_VALUE (FirstNonAddress, (UINT64)SIZE_1GB);
+  if (Pci64Base == 0) {
+    Pci64Base = FirstNonAddress;
+  }
+
+  Pci64Base = ALIGN_VALUE (Pci64Base, (UINT64)SIZE_1GB);
   Pci64Size = ALIGN_VALUE (Pci64Size, (UINT64)SIZE_1GB);
 
   //
@@ -238,7 +247,10 @@ GetFirstNonAddress (
   //
   // The useful address space ends with the 64-bit PCI host aperture.
   //
-  FirstNonAddress = Pci64Base + Pci64Size;
+  if (FirstNonAddress < Pci64Base + Pci64Size) {
+    FirstNonAddress = Pci64Base + Pci64Size;
+  }
+
   return FirstNonAddress;
 }
 
@@ -578,7 +590,9 @@ InitializeRamRegions (
   VOID
   )
 {
-  QemuInitializeRam ();
+  if (AcrnPublishRamRegions () != RETURN_SUCCESS) {
+    QemuInitializeRam ();
+  }
 
   if (mS3Supported && (mBootMode != BOOT_ON_S3_RESUME)) {
     //

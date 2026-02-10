@@ -134,4 +134,20 @@ extern BOOLEAN  mQ35SmramAtDefaultSmbase;
 
 extern UINT32  mQemuUc32Base;
 
+RETURN_STATUS
+AcrnGetFirstNonAddress (
+  OUT  UINT64               *MaxAddress OPTIONAL
+  );
+
+RETURN_STATUS
+AcrnFindPciMmio64Aperture (
+  OUT  UINT64               *Pci64Base OPTIONAL,
+  OUT  UINT64               *Pci64Size OPTIONAL
+  );
+
+RETURN_STATUS
+AcrnPublishRamRegions (
+  VOID
+  );
+
 #endif // _PLATFORM_PEI_H_INCLUDED_

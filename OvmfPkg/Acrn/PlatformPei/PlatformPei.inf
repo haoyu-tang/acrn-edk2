@@ -25,6 +25,7 @@
 #
 
 [Sources]
+  Acrn.c
   AmdSev.c
   ClearCache.c
   Cmos.c
