@@ -353,8 +353,7 @@ MiscInitialization (
   // Determine platform type and save Host Bridge DID to PCD
   //
   switch (mHostBridgeDevId) {
-    case 0x7432: // ACRN (AMD hostbridge)
-    case 0x1275: // ACRN (Intel hostbridge)
+    case 0x7432: // BHYVE (AMD hostbridge)
     case INTEL_82441_DEVICE_ID:
       PmCmd      = POWER_MGMT_REGISTER_PIIX4 (PCI_COMMAND_OFFSET);
       Pmba       = POWER_MGMT_REGISTER_PIIX4 (PIIX4_PMBA);
@@ -371,6 +370,8 @@ MiscInitialization (
       AcpiCtlReg = POWER_MGMT_REGISTER_Q35 (ICH9_ACPI_CNTL);
       AcpiEnBit  = ICH9_ACPI_CNTL_ACPI_EN;
       break;
+    case ACRN_HOSTBRIDGE_DEVICE_ID:
+      break;
     default:
       DEBUG ((
         DEBUG_ERROR,
@@ -386,6 +387,9 @@ MiscInitialization (
 
   PcdStatus = PcdSet16S (PcdOvmfHostBridgePciDevId, mHostBridgeDevId);
   ASSERT_RETURN_ERROR (PcdStatus);
+  if (mHostBridgeDevId == ACRN_HOSTBRIDGE_DEVICE_ID)  {
+      return;
+  }
 
   //
   // If the appropriate IOspace enable bit is set, assume the ACPI PMBA

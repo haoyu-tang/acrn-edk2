@@ -1253,8 +1253,7 @@ PciAcpiInitialization (
   //
   mHostBridgeDevId = PcdGet16 (PcdOvmfHostBridgePciDevId);
   switch (mHostBridgeDevId) {
-    case 0x7432: // ACRN (AMD hostbridge)
-    case 0x1275: // ACRN (Intel hostbridge)
+    case 0x7432: // BHYVE (AMD hostbridge)
     case INTEL_82441_DEVICE_ID:
       Pmba = POWER_MGMT_REGISTER_PIIX4 (PIIX4_PMBA);
       //
@@ -1279,6 +1278,14 @@ PciAcpiInitialization (
       PciWrite8 (PCI_LIB_ADDRESS (0, 0x1f, 0, 0x6a), 0x0b); // G
       PciWrite8 (PCI_LIB_ADDRESS (0, 0x1f, 0, 0x6b), 0x0b); // H
       break;
+    case ACRN_HOSTBRIDGE_DEVICE_ID:
+      //
+      // PCI_INTERRUPT_LINE is already initialized
+      //
+      // Set ACPI SCI_EN bit in PMCNTRL using SMI command
+      //
+      IoWrite8 (0xb2, 0xa0);
+      return;
     default:
       DEBUG ((
         DEBUG_ERROR,
