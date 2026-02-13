@@ -148,8 +148,12 @@ AcrnFindPciMmio64Aperture (
   OUT  UINT64               *Pci64Size
   )
 {
-  *Pci64Base = BASE_4GB;
-  *Pci64Size = SIZE_1GB;
+  //
+  // ACRN DM maps 64-bit PCI BARs at 256GB (0x4000000000).
+  // Hardcode the 64-bit PCI host aperture to [256GB, 512GB).
+  //
+  *Pci64Base = BASE_256GB;
+  *Pci64Size = SIZE_256GB;
   return RETURN_SUCCESS;
 }
 
@@ -161,6 +165,9 @@ AcrnPublishRamRegions (
 {
   ACRN_E820_INFO    *E820;
   UINT64            PciExBarBase;
+  UINT64            Pci64Base;
+  UINT64            Pci64Size;
+  UINT64            Pci64Limit;
   BOOLEAN           MtrrSupported;
   UINT32            Loop;
   EFI_E820_ENTRY64  *Entry;
@@ -177,6 +184,8 @@ AcrnPublishRamRegions (
   DEBUG ((EFI_D_INFO, "Using memory map provided by ACRN\n"));
 
   PciExBarBase = FixedPcdGet64 (PcdPciExpressBaseAddress);
+  AcrnFindPciMmio64Aperture (&Pci64Base, &Pci64Size);
+  Pci64Limit = Pci64Base + Pci64Size;
   MtrrSupported = IsMtrrSupported ();
 
   for (Loop = 0, Entry = &E820->E820Map[Loop]; Loop < E820->E820EntriesCount;
@@ -188,7 +197,9 @@ AcrnPublishRamRegions (
         MtrrSetMemoryAttribute (Entry->BaseAddr, Entry->Length, CacheWriteBack);
       }
     } else if (Entry->Type == EfiAcpiAddressRangeReserved &&
-               (Entry->BaseAddr < PciExBarBase || Entry->BaseAddr >= BASE_4GB)) {
+               (Entry->BaseAddr < PciExBarBase || Entry->BaseAddr >= BASE_4GB) &&
+               (Entry->BaseAddr + Entry->Length <= Pci64Base ||
+                Entry->BaseAddr >= Pci64Limit)) {
       AddReservedMemoryBaseSizeHob (Entry->BaseAddr, Entry->Length, FALSE);
     }
   }
