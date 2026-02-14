@@ -1,3 +1,11 @@
+Note: acrn-edk2 repo here is a fork of EDK II (https://github.com/tianocore/edk2), ACRN uses one of its sub component, OvmfPkg/Acrn as virtual bootloader.
+
+Build command for RELEASE version:
+ build -a X64 -t GCC5 -b RELEASE -p OvmfPkg/Acrn/AcrnX64.dsc -DFD_SIZE_2MB -DDEBUG_ON_SERIAL_PORT=TRUE
+
+Output:
+ Build/AcrnX64/RELEASE_GCC5/FV/OVMF-ACRN.fd
+
 ==============
 EDK II Project
 ==============
