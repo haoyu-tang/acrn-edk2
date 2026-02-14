@@ -1724,7 +1724,24 @@ CoreStartImage (
   //
   // Image has completed.  Verify the tpl is the same
   //
-  ASSERT (Image->Tpl == gEfiCurrentTpl);
+  if (Image->Tpl != gEfiCurrentTpl) {
+    DEBUG ((DEBUG_ERROR, "StartImage TPL mismatch: image=%p entry=%p type=0x%x expected=0x%x current=0x%x\n",
+            Image->Info.ImageBase,
+            Image->EntryPoint,
+            Image->Type,
+            (UINT32)Image->Tpl,
+            (UINT32)gEfiCurrentTpl));
+    if ((Image->Type == EFI_IMAGE_SUBSYSTEM_EFI_APPLICATION) && (gEfiCurrentTpl > Image->Tpl)) {
+      DEBUG ((DEBUG_ERROR, "StartImage: clamping TPL after EFI application return\n"));
+    } else {
+      ASSERT (FALSE);
+    }
+  }
+
+  if (gEfiCurrentTpl < Image->Tpl) {
+    ASSERT (FALSE);
+  }
+
   CoreRestoreTpl (Image->Tpl);
 
   CoreFreePool (Image->JumpBuffer);

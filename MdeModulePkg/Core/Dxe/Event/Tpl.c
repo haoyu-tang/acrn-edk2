@@ -9,6 +9,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include "DxeMain.h"
 #include "Event.h"
 
+#include <Library/BaseLib.h>
+
 /**
   Set Interrupt State.
 
@@ -59,11 +61,53 @@ CoreRaiseTpl (
   )
 {
   EFI_TPL  OldTpl;
+  STATIC VOID    *mLastRaiseTplHighCaller;
+  STATIC EFI_TPL  mLastRaiseTplHighOldTpl;
+  STATIC EFI_TPL  mLastRaiseTplHighNewTpl;
 
   OldTpl = gEfiCurrentTpl;
+  if (NewTpl >= TPL_HIGH_LEVEL) {
+    mLastRaiseTplHighCaller = RETURN_ADDRESS (0);
+    mLastRaiseTplHighOldTpl = OldTpl;
+    mLastRaiseTplHighNewTpl = NewTpl;
+  }
+
   if (OldTpl > NewTpl) {
-    DEBUG ((DEBUG_ERROR, "FATAL ERROR - RaiseTpl with OldTpl(0x%x) > NewTpl(0x%x)\n", OldTpl, NewTpl));
-    ASSERT (FALSE);
+    if ((mCurrentImage != NULL) && (mCurrentImage->Type == EFI_IMAGE_SUBSYSTEM_EFI_APPLICATION)) {
+      DEBUG ((DEBUG_ERROR, "RaiseTpl: clamping TPL after EFI application violated TPL rules\n"));
+      DEBUG ((DEBUG_ERROR, "RaiseTpl caller=%p last-high caller=%p old=0x%x new=0x%x\n",
+              RETURN_ADDRESS (0),
+              mLastRaiseTplHighCaller,
+              mLastRaiseTplHighOldTpl,
+              mLastRaiseTplHighNewTpl));
+      DEBUG ((DEBUG_ERROR, "Current image base=%p entry=%p type=0x%x expected=0x%x\n",
+              mCurrentImage->Info.ImageBase,
+              mCurrentImage->EntryPoint,
+              (UINT32)mCurrentImage->Type,
+              (UINT32)mCurrentImage->Tpl));
+      if ((OldTpl >= TPL_HIGH_LEVEL) && (mCurrentImage->Tpl < TPL_HIGH_LEVEL)) {
+        CoreSetInterruptState (TRUE);
+      }
+
+      gEfiCurrentTpl = mCurrentImage->Tpl;
+      OldTpl         = gEfiCurrentTpl;
+    }
+
+    if (OldTpl > NewTpl) {
+      DEBUG ((DEBUG_ERROR, "FATAL ERROR - RaiseTpl with OldTpl(0x%x) > NewTpl(0x%x)\n", OldTpl, NewTpl));
+      DEBUG ((DEBUG_ERROR, "RaiseTpl caller=%p last-high caller=%p old=0x%x new=0x%x\n",
+              RETURN_ADDRESS (0),
+              mLastRaiseTplHighCaller,
+              mLastRaiseTplHighOldTpl,
+              mLastRaiseTplHighNewTpl));
+      if (mCurrentImage != NULL) {
+        DEBUG ((DEBUG_ERROR, "Current image base=%p entry=%p type=0x%x\n",
+                mCurrentImage->Info.ImageBase,
+                mCurrentImage->EntryPoint,
+                (UINT32)mCurrentImage->Type));
+      }
+      ASSERT (FALSE);
+    }
   }
 
   ASSERT (VALID_TPL (NewTpl));

@@ -1854,6 +1854,8 @@ EfiBootManagerBoot (
   EFI_BOOT_LOGO_PROTOCOL     *BootLogo;
   EFI_EVENT                  LegacyBootEvent;
 
+  DEBUG ((DEBUG_INFO | DEBUG_LOAD, "EfiBootManagerBoot: entry TPL=0x%x\n", (UINT32)EfiGetCurrentTpl ()));
+
   if (BootOption == NULL) {
     return;
   }
@@ -2058,8 +2060,9 @@ EfiBootManagerBoot (
 
   REPORT_STATUS_CODE (EFI_PROGRESS_CODE, PcdGet32 (PcdProgressCodeOsLoaderStart));
 
+  DEBUG ((DEBUG_INFO | DEBUG_LOAD, "StartImage: current TPL=0x%x\n", (UINT32)EfiGetCurrentTpl ()));
   Status = gBS->StartImage (ImageHandle, &BootOption->ExitDataSize, &BootOption->ExitData);
-  DEBUG ((DEBUG_INFO | DEBUG_LOAD, "Image Return Status = %r\n", Status));
+  DEBUG ((DEBUG_INFO | DEBUG_LOAD, "StartImage returned %r, current TPL=0x%x\n", Status, (UINT32)EfiGetCurrentTpl ()));
   BootOption->Status = Status;
 
   //

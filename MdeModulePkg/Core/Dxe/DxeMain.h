@@ -236,6 +236,8 @@ extern EFI_RUNTIME_SERVICES  *gDxeCoreRT;
 extern EFI_DXE_SERVICES      *gDxeCoreDS;
 extern EFI_HANDLE            gDxeCoreImageHandle;
 
+extern LOADED_IMAGE_PRIVATE_DATA  *mCurrentImage;
+
 extern BOOLEAN  gMemoryMapTerminated;
 
 extern EFI_DECOMPRESS_PROTOCOL  gEfiDecompress;
