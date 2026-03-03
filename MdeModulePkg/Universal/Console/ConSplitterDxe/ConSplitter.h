@@ -148,6 +148,17 @@ typedef struct {
 
   BOOLEAN                              KeyEventSignalState;
   BOOLEAN                              InputEventSignalState;
+
+  //
+  // Buffered key from WaitForKey fallback path.
+  // When the timer-based WaitForKey notification does not fire
+  // (e.g., on some virtual platforms), the fallback proactively
+  // reads a key via TextIn and stores it here so ReadKeyStroke
+  // can return it without re-reading from the physical device.
+  //
+  BOOLEAN                              HasBufferedKey;
+  EFI_INPUT_KEY                        BufferedKey;
+
   EFI_EVENT                            ConnectConInEvent;
 } TEXT_IN_SPLITTER_PRIVATE_DATA;
 

@@ -34,6 +34,12 @@ ReadKeyStrokeWorker (
     return EFI_INVALID_PARAMETER;
   }
 
+  //
+  // Fallback path: poll serial input on demand in case periodic timer
+  // callbacks are delayed or not dispatched on this platform.
+  //
+  TerminalConInTimerHandler (NULL, TerminalDevice);
+
   KeyData->KeyState.KeyShiftState  = 0;
   KeyData->KeyState.KeyToggleState = 0;
 
@@ -487,6 +493,12 @@ TerminalConInWaitForKey (
   )
 {
   //
+  // Fallback path: opportunistically poll serial before checking FIFO,
+  // so WaitForEvent() can observe newly arrived UART input.
+  //
+  TerminalConInTimerHandler (Event, Context);
+
+  //
   // Someone is waiting on the keystroke event, if there's
   // a key pending, signal the event
   //
@@ -510,7 +522,6 @@ TerminalConInTimerHandler (
 {
   EFI_STATUS              Status;
   TERMINAL_DEV            *TerminalDevice;
-  UINT32                  Control;
   UINT8                   Input;
   EFI_SERIAL_IO_MODE      *Mode;
   EFI_SERIAL_IO_PROTOCOL  *SerialIo;
@@ -556,33 +567,27 @@ TerminalConInTimerHandler (
   }
 
   //
-  // Check whether serial buffer is empty.
-  // Skip the key transfer loop only if the SerialIo protocol instance
-  // successfully reports EFI_SERIAL_INPUT_BUFFER_EMPTY.
+  // Always attempt to read from serial, bypassing GetControl() check.
+  // Some virtual UARTs (e.g. ACRN) may report EFI_SERIAL_INPUT_BUFFER_EMPTY
+  // in GetControl() even when data is available. The Read() call itself
+  // will return EFI_TIMEOUT when no data is available, so this is safe.
   //
-  Status = SerialIo->GetControl (SerialIo, &Control);
-  if (EFI_ERROR (Status) || ((Control & EFI_SERIAL_INPUT_BUFFER_EMPTY) == 0)) {
-    //
-    // Fetch all the keys in the serial buffer,
-    // and insert the byte stream into RawFIFO.
-    //
-    while (!IsRawFiFoFull (TerminalDevice)) {
-      Status = GetOneKeyFromSerial (TerminalDevice->SerialIo, &Input);
+  while (!IsRawFiFoFull (TerminalDevice)) {
+    Status = GetOneKeyFromSerial (TerminalDevice->SerialIo, &Input);
 
-      if (EFI_ERROR (Status)) {
-        if (Status == EFI_DEVICE_ERROR) {
-          REPORT_STATUS_CODE_WITH_DEVICE_PATH (
-            EFI_ERROR_CODE | EFI_ERROR_MINOR,
-            (EFI_PERIPHERAL_REMOTE_CONSOLE | EFI_P_EC_INPUT_ERROR),
-            TerminalDevice->DevicePath
-            );
-        }
-
-        break;
+    if (EFI_ERROR (Status)) {
+      if (Status == EFI_DEVICE_ERROR) {
+        REPORT_STATUS_CODE_WITH_DEVICE_PATH (
+          EFI_ERROR_CODE | EFI_ERROR_MINOR,
+          (EFI_PERIPHERAL_REMOTE_CONSOLE | EFI_P_EC_INPUT_ERROR),
+          TerminalDevice->DevicePath
+          );
       }
 
-      RawFiFoInsertOneKey (TerminalDevice, Input);
+      break;
     }
+
+    RawFiFoInsertOneKey (TerminalDevice, Input);
   }
 
   //

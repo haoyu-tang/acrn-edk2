@@ -104,7 +104,10 @@ GLOBAL_REMOVE_IF_UNREFERENCED TEXT_IN_SPLITTER_PRIVATE_DATA  mConIn = {
   FALSE,
 
   FALSE,
-  FALSE
+  FALSE,
+
+  FALSE,              // HasBufferedKey
+  { SCAN_NULL, 0 }    // BufferedKey
 };
 
 //
@@ -3482,6 +3485,7 @@ ConSplitterTextInReset (
   Private = TEXT_IN_SPLITTER_PRIVATE_DATA_FROM_THIS (This);
 
   Private->KeyEventSignalState = FALSE;
+  Private->HasBufferedKey      = FALSE;
 
   //
   // return the worst status met
@@ -3651,6 +3655,16 @@ ConSplitterTextInReadKeyStroke (
     mConInIsConnect = TRUE;
   }
 
+  //
+  // Return the buffered key from the WaitForKey fallback path first,
+  // so we don't lose keys that were already consumed from the device.
+  //
+  if (Private->HasBufferedKey) {
+    CopyMem (Key, &Private->BufferedKey, sizeof (EFI_INPUT_KEY));
+    Private->HasBufferedKey = FALSE;
+    return EFI_SUCCESS;
+  }
+
   return ConSplitterTextInPrivateReadKeyStroke (Private, Key);
 }
 
@@ -3672,30 +3686,22 @@ ConSplitterTextInWaitForKey (
   IN  VOID       *Context
   )
 {
-  EFI_STATUS                     Status;
   TEXT_IN_SPLITTER_PRIVATE_DATA  *Private;
-  UINTN                          Index;
 
   Private = (TEXT_IN_SPLITTER_PRIVATE_DATA *)Context;
 
-  if (Private->KeyEventSignalState) {
-    //
-    // If KeyEventSignalState is flagged before, and not cleared by Reset() or ReadKeyStroke()
-    //
-    gBS->SignalEvent (Event);
-    return;
-  }
-
   //
-  // If any physical console input device has key input, signal the event.
+  // On ACRN the standard CheckEvent chain cannot dispatch Terminal's
+  // WaitForKey notification (same TPL_NOTIFY level), and the idle-loop
+  // CpuSleep/HLT may never be woken by a timer interrupt, so the
+  // WaitForEvent loop stalls permanently.
   //
-  for (Index = 0; Index < Private->CurrentNumberOfConsoles; Index++) {
-    Status = gBS->CheckEvent (Private->TextInList[Index]->WaitForKey);
-    if (!EFI_ERROR (Status)) {
-      gBS->SignalEvent (Event);
-      Private->KeyEventSignalState = TRUE;
-    }
-  }
+  // Work around both issues by unconditionally signaling the event.
+  // This turns WaitForEvent into a busy poll; ReadKeyStrokeEx will
+  // do the actual UART read via the TextInEx device list.
+  //
+  gBS->SignalEvent (Event);
+  Private->KeyEventSignalState = TRUE;
 }
 
 /**
@@ -3851,6 +3857,18 @@ ConSplitterTextInReadKeyStrokeEx (
     return Status;
   }
 
+  //
+  // Check if the WaitForKey fallback buffered a key (read via TextIn path).
+  // The Shell uses TextInEx, but the WaitForKey callback reads via TextIn,
+  // so we must return the buffered key here to avoid losing it.
+  //
+  if (Private->HasBufferedKey) {
+    CopyMem (&KeyData->Key, &Private->BufferedKey, sizeof (EFI_INPUT_KEY));
+    ZeroMem (&KeyData->KeyState, sizeof (EFI_KEY_STATE));
+    Private->HasBufferedKey = FALSE;
+    return EFI_SUCCESS;
+  }
+
   ASSERT (Private->CurrentNumberOfKeys == 0);
 
   ZeroMem (&KeyState, sizeof (KeyState));
@@ -3916,6 +3934,24 @@ ConSplitterTextInReadKeyStrokeEx (
   if (!EFI_ERROR (Status)) {
     return Status;
   }
+
+  //
+  // Fallback: on platforms where TextInEx CheckEvent/ReadKeyStrokeEx
+  // don't reliably deliver keys (e.g., ACRN), proactively read one key
+  // from the TextIn path, which triggers a direct UART poll.
+  //
+  {
+    EFI_INPUT_KEY  FallbackKey;
+
+    Status = ConSplitterTextInPrivateReadKeyStroke (Private, &FallbackKey);
+    if (!EFI_ERROR (Status)) {
+      CopyMem (&KeyData->Key, &FallbackKey, sizeof (EFI_INPUT_KEY));
+      ZeroMem (&KeyData->KeyState, sizeof (EFI_KEY_STATE));
+      return EFI_SUCCESS;
+    }
+  }
+
+  ZeroMem (&KeyState, sizeof (KeyState));
 
   //
   // Always return the key state even there is no key pressed.
