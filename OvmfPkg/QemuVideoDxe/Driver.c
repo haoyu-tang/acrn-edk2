@@ -298,21 +298,42 @@ QemuVideoControllerDriverStart (
 
   SupportedVgaIo &= (UINT64)(EFI_PCI_IO_ATTRIBUTE_VGA_IO | EFI_PCI_IO_ATTRIBUTE_VGA_IO_16);
   if ((SupportedVgaIo == 0) && IS_PCI_VGA (&Pci)) {
-    Status = EFI_UNSUPPORTED;
-    goto ClosePciIo;
+    //
+    // MMIO-based variants (e.g. VirtIO VGA) do not need legacy VGA I/O ports.
+    // Only reject the device if it would actually require port I/O access.
+    //
+    if (Private->Variant != QEMU_VIDEO_BOCHS_MMIO) {
+      DEBUG ((DEBUG_INFO, "QemuVideo: VGA I/O not supported, bail out\n"));
+      Status = EFI_UNSUPPORTED;
+      goto ClosePciIo;
+    }
+
+    DEBUG ((DEBUG_INFO, "QemuVideo: VGA I/O not supported, continue with MMIO\n"));
   }
 
   //
-  // Set new PCI attributes
+  // Set new PCI attributes.
+  // For MMIO-based variants, skip legacy VGA attributes (I/O and memory) since
+  // the device uses BAR-based MMIO access, not legacy VGA resources.
   //
-  Status = Private->PciIo->Attributes (
-                             Private->PciIo,
-                             EfiPciIoAttributeOperationEnable,
-                             EFI_PCI_DEVICE_ENABLE | EFI_PCI_IO_ATTRIBUTE_VGA_MEMORY | SupportedVgaIo,
-                             NULL
-                             );
-  if (EFI_ERROR (Status)) {
-    goto ClosePciIo;
+  {
+    UINT64  EnableAttrs;
+
+    EnableAttrs = EFI_PCI_DEVICE_ENABLE;
+    if (Private->Variant != QEMU_VIDEO_BOCHS_MMIO) {
+      EnableAttrs |= EFI_PCI_IO_ATTRIBUTE_VGA_MEMORY | SupportedVgaIo;
+    }
+
+    Status = Private->PciIo->Attributes (
+                               Private->PciIo,
+                               EfiPciIoAttributeOperationEnable,
+                               EnableAttrs,
+                               NULL
+                               );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_WARN, "QemuVideo: Failed to enable PCI attributes: %r\n", Status));
+      goto ClosePciIo;
+    }
   }
 
   //
